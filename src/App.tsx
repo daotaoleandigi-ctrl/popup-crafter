@@ -17,7 +17,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthGate>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Suspense
             fallback={
               <p role="status" className="p-10 text-center">

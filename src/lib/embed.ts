@@ -10,8 +10,10 @@ export function getEmbedCode(popup: PopupConfig) {
       WIDGET_RUNTIME +
       "</script>"
     );
-  const base = import.meta.env.VITE_APP_URL || window.location.origin;
-  const source = new URL("/embed-loader.js", base);
+  const base =
+    import.meta.env.VITE_APP_URL ||
+    new URL(import.meta.env.BASE_URL, window.location.origin).href;
+  const source = new URL("embed-loader.js", base.endsWith("/") ? base : `${base}/`);
   source.searchParams.set("project", cloudUrl);
   source.searchParams.set("key", cloudKey);
   source.searchParams.set("id", popup.id);
