@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 270 40% 98%;
+    --foreground: 263 40% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 263 40% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 263 40% 14%;
+
+    --primary: 263 70% 50%;
+    --primary-foreground: 270 80% 98%;
+
+    --primary-glow: 280 80% 58%;
+
+    --secondary: 270 30% 94%;
+    --secondary-foreground: 263 40% 20%;
+
+    --muted: 270 24% 94%;
+    --muted-foreground: 263 16% 42%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 263 50% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 270 22% 90%;
+    --input: 270 22% 90%;
+    --ring: 263 70% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 270 40% 99%;
+    --sidebar-foreground: 263 40% 22%;
+    --sidebar-primary: 263 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 30% 94%;
+    --sidebar-accent-foreground: 263 40% 20%;
+    --sidebar-border: 270 22% 90%;
+    --sidebar-ring: 263 70% 50%;
+  }
+
+  .dark {
+    --background: 263 40% 10%;
+    --foreground: 270 30% 96%;
+
+    --card: 263 38% 13%;
+    --card-foreground: 270 30% 96%;
+
+    --popover: 263 38% 13%;
+    --popover-foreground: 270 30% 96%;
+
+    --primary: 38 92% 55%;
+    --primary-foreground: 263 50% 12%;
+
+    --primary-glow: 263 70% 60%;
+
+    --secondary: 263 30% 20%;
+    --secondary-foreground: 270 30% 92%;
+
+    --muted: 263 30% 20%;
+    --muted-foreground: 270 18% 70%;
+
+    --accent: 263 70% 55%;
+    --accent-foreground: 270 80% 98%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 263 30% 24%;
+    --input: 263 30% 24%;
+    --ring: 38 92% 55%;
+    --sidebar-background: 263 40% 12%;
+    --sidebar-foreground: 270 30% 90%;
+    --sidebar-primary: 38 92% 55%;
+    --sidebar-primary-foreground: 263 50% 12%;
+    --sidebar-accent: 263 30% 20%;
+    --sidebar-accent-foreground: 270 30% 92%;
+    --sidebar-border: 263 30% 24%;
+    --sidebar-ring: 38 92% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family:
+      "Be Vietnam Pro",
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--primary)),
+      hsl(var(--primary-glow))
+    );
+  }
+  .gradient-accent {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--accent)),
+      hsl(var(--primary-glow))
+    );
+  }
+  .text-gradient {
+    background-image: linear-gradient(
+      120deg,
+      hsl(var(--primary)),
+      hsl(var(--primary-glow))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local("Be Vietnam Pro");
+}
+
+/* Preview responds to available panel width, including beside the settings. */
+.popup-preview-stage { container-type: inline-size; container-name: popup-preview; }
+.popup-preview-grid { grid-template-columns: minmax(0, 1fr); }
+.popup-preview-banner { min-height: 160px; height: 180px; }
+@container popup-preview (min-width: 680px) {
+  .popup-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .popup-preview-banner { min-height: 420px; height: auto; }
+}

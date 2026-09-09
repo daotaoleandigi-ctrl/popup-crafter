@@ -1,0 +1,76 @@
+import type { PopupConfig } from "@/types";
+
+const FONTS = [
+  "Inter, system-ui, sans-serif",
+  "Be Vietnam Pro, system-ui, sans-serif",
+  "Roboto, system-ui, sans-serif",
+  "Merriweather, Georgia, serif",
+  "Poppins, system-ui, sans-serif",
+  "Montserrat, system-ui, sans-serif",
+  "Playfair Display, Georgia, serif",
+];
+
+export const FONT_OPTIONS = FONTS;
+
+export function createPopup(partial?: Partial<PopupConfig>): PopupConfig {
+  const now = Date.now();
+  const id =
+    `POPUP_${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
+  return {
+    id,
+    name: "Popup chưa đặt tên",
+    createdAt: now,
+    updatedAt: now,
+    borderRadius: 16,
+    bgColor: "#ffffff",
+    fontFamily: FONTS[1],
+    closeColor: "#ffffff",
+    closeStyle: "circle",
+    closeBgColor: "rgba(0,0,0,0.45)",
+    maxWidth: 880,
+    displayMode: "popup",
+    autoShowDelay: 0,
+    bannerImage: "",
+    bannerFit: "cover",
+    bannerPosition: "center",
+    scratchTitle: "Cào quà ngay!",
+    scratchHint: "Dùng ngón tay hoặc chuột cào lên thẻ để mở quà",
+    scratchCoverImage: "",
+    rewardImage: "",
+    rewardSubtitle: "Bạn đã trúng",
+    rewardSubtitleColor: "#64748b",
+    rewardSubtitleFontSize: 13,
+    rewardSubtitleFontFamily: FONTS[1],
+    rewardText: "Voucher giảm 50%",
+    rewardTextColor: "#0f172a",
+    rewardTextFontSize: 18,
+    rewardTextFontFamily: FONTS[1],
+    rewardIconBefore: "🎁",
+    rewardIconAfter: "",
+    scratchPercent: 50,
+    scratchTitleColor: "#1e293b",
+    claimButtonLabel: "Nhận quà ngay!",
+    claimButtonColor: "#7c3aed",
+    claimButtonColor2: "#a78bfa",
+    claimButtonGradient: false,
+    claimButtonTextColor: "#ffffff",
+    declineButtonLabel: "Không, cảm ơn",
+    showDeclineButton: true,
+    formEmbedCode: "",
+    formTitle: "Điền thông tin để nhận quà",
+    thanksTitle: "Chúc mừng bạn!",
+    thanksMessage: "Phần quà đã được gửi về email của bạn.",
+    thanksTextColor: "#0f172a",
+    thanksFontFamily: FONTS[1],
+    thanksButtonLabel: "Đóng",
+    bubbleEnabled: true,
+    bubblePosition: "bottom-left",
+    bubbleText: "Nhận quà",
+    bubbleBgColor: "#7c3aed",
+    bubbleTextColor: "#ffffff",
+    bubbleSize: 60,
+    bubbleFontSize: 14,
+    bubbleFontFamily: FONTS[1],
+    ...partial,
+  };
+}
