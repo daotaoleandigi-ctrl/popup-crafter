@@ -55,7 +55,10 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     try {
       if (mode === "reset") {
         const { error } = await cloud.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
+          redirectTo: new URL(
+            import.meta.env.BASE_URL,
+            window.location.origin,
+          ).href,
         });
         if (error) throw error;
         setMessage(
@@ -67,13 +70,22 @@ export default function AuthGate({ children }: { children: ReactNode }) {
         setPassword("");
         setMode("login");
       } else if (mode === "register") {
-        const { error } = await cloud.auth.signUp({
+        const { data, error } = await cloud.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: new URL(
+              import.meta.env.BASE_URL,
+              window.location.origin,
+            ).href,
+          },
         });
         if (error) throw error;
-        setMessage("Kiểm tra email để xác nhận tài khoản trước khi đăng nhập.");
+        setMessage(
+          data.session
+            ? "Tạo tài khoản thành công."
+            : "Kiểm tra email để xác nhận tài khoản trước khi đăng nhập.",
+        );
         setPassword("");
       } else {
         const { error } = await cloud.auth.signInWithPassword({

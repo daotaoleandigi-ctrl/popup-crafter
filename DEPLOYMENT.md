@@ -42,7 +42,7 @@ Dùng hosting hỗ trợ website tĩnh với HTTPS:
 Lệnh prebuild/predev tự tạo public/widget-runtime.js từ cùng nguồn runtime dùng trong bản demo.
 
 ## 4. Luồng sử dụng
-1. Đăng ký và xác nhận email.
+1. Đăng ký tài khoản; bản triển khai hiện cho phép đăng nhập ngay mà không cần xác nhận email.
 2. Đăng nhập, tạo popup; thay đổi được lưu thành bản nháp.
 3. Tải ảnh PNG/JPG/WebP/GIF tối đa 5 MB lên Storage.
 4. Chọn Xuất bản rồi lấy mã nhúng; dán mã vào website khách hàng.
