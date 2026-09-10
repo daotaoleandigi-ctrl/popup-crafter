@@ -175,7 +175,6 @@ export default function PopupPreview({
             setBubbleHover(false);
             setAutoStep(1);
             onStepChange(1);
-            setScratched(false);
             setConfetti(0);
             setConfettiOrigin(null);
           }}
@@ -279,6 +278,7 @@ export default function PopupPreview({
                     onComplete={handleScratchComplete}
                     resetKey={config.id + current}
                     dataOrigin
+                    revealed={scratched}
                   />
                   {scratched ? (
                     <div className="flex flex-col items-center gap-2">

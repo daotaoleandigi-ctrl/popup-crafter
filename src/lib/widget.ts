@@ -455,9 +455,25 @@ export function mountPopup(config: PopupConfig): () => void {
     ".pb-scratch",
   ) as HTMLCanvasElement | null;
 
+  const scratchStateKey = `popup-crafter-scratched:${config.id || "default"}`;
+  const readScratchState = () => {
+    try {
+      return window.sessionStorage.getItem(scratchStateKey) === "1";
+    } catch {
+      return false;
+    }
+  };
+  const saveScratchState = () => {
+    try {
+      window.sessionStorage.setItem(scratchStateKey, "1");
+    } catch {
+      // The in-memory state still works when storage is unavailable.
+    }
+  };
+
   let step = 1;
   let autoCloseTimer: number | null = null;
-  let completed = false;
+  let completed = readScratchState();
 
   // Bubble element (lives OUTSIDE shadow so it can be positioned freely)
   let bubbleEl: HTMLElement | null = null;
@@ -557,7 +573,13 @@ export function mountPopup(config: PopupConfig): () => void {
     }
   }
 
-  if (scratchCanvas) {
+  if (scratchCanvas && completed) {
+    scratchCanvas.style.display = "none";
+    const claim = shadow.querySelector(".pb-claim") as HTMLElement | null;
+    const hint = shadow.querySelector(".pb-hint") as HTMLElement | null;
+    if (hint) hint.style.display = "none";
+    if (claim) claim.style.display = "flex";
+  } else if (scratchCanvas) {
     const step1 = shadow.querySelector(".pb-step-1") as HTMLElement | null;
     if (step1) {
       step1.style.touchAction = "none";
@@ -566,6 +588,7 @@ export function mountPopup(config: PopupConfig): () => void {
     initScratch(scratchCanvas, step1 || scratchCanvas, config, () => {
       if (completed) return;
       completed = true;
+      saveScratchState();
       fireConfetti(confettiCanvas, shadow.querySelector(".pb-scratch-wrap"));
       const ctx = scratchCanvas.getContext("2d")!;
       ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
@@ -623,30 +646,6 @@ export function mountPopup(config: PopupConfig): () => void {
         if (t.closest && t.closest(".scratch-popup-bubble")) {
           hideBubble();
           setStep(1);
-          completed = false;
-          if (scratchCanvas) {
-            const step1 = shadow.querySelector(
-              ".pb-step-1",
-            ) as HTMLElement | null;
-            initScratch(scratchCanvas, step1 || scratchCanvas, config, () => {
-              if (completed) return;
-              completed = true;
-              fireConfetti(
-                confettiCanvas,
-                shadow.querySelector(".pb-scratch-wrap"),
-              );
-              const ctx = scratchCanvas.getContext("2d")!;
-              ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
-              const claim = shadow.querySelector(
-                ".pb-claim",
-              ) as HTMLElement | null;
-              const hint = shadow.querySelector(
-                ".pb-hint",
-              ) as HTMLElement | null;
-              if (hint) hint.style.display = "none";
-              if (claim) claim.style.display = "flex";
-            });
-          }
         }
       },
       true,

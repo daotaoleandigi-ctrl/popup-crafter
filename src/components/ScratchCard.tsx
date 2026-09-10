@@ -19,6 +19,7 @@ interface ScratchCardProps {
   onComplete?: () => void;
   resetKey?: number | string;
   dataOrigin?: boolean;
+  revealed?: boolean;
 }
 
 const DEFAULT_COVER =
@@ -46,6 +47,7 @@ export default function ScratchCard({
   onComplete,
   resetKey,
   dataOrigin,
+  revealed = false,
 }: ScratchCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [completed, setCompleted] = useState(false);
@@ -157,6 +159,7 @@ export default function ScratchCard({
       style={{ width, maxWidth: "100%", aspectRatio: `${width} / ${height}` }}
       data-scratch-origin={dataOrigin ? "1" : undefined}
       onPointerDown={(e) => {
+        if (revealed) return;
         // Allow starting a scratch from just outside the card and dragging in.
         drawingRef.current = true;
         lastRef.current = null;
@@ -168,7 +171,11 @@ export default function ScratchCard({
       {/* Expanded hit area so the pointer can start slightly outside the card */}
       <div
         className="absolute -inset-4 z-0"
-        style={{ touchAction: "none", cursor: "grab" }}
+        style={{
+          touchAction: "none",
+          cursor: revealed ? "default" : "grab",
+          pointerEvents: revealed ? "none" : undefined,
+        }}
       />
       <div
         className="relative overflow-hidden rounded-xl"
@@ -219,7 +226,11 @@ export default function ScratchCard({
         <canvas
           ref={canvasRef}
           className="absolute inset-0 h-full w-full touch-none cursor-grab active:cursor-grabbing"
-          style={{ opacity: completed ? 0 : 1, transition: "opacity .4s" }}
+          style={{
+            opacity: completed || revealed ? 0 : 1,
+            pointerEvents: revealed ? "none" : undefined,
+            transition: "opacity .4s",
+          }}
           onPointerMove={(e) => {
             if (!drawingRef.current) return;
             const p = getPos(e);
