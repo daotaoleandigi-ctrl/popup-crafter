@@ -156,3 +156,25 @@ All colors MUST be HSL.
   .popup-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .popup-preview-banner { min-height: 420px; height: auto; }
 }
+
+@keyframes collapsible-section-down {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-collapsible-content-height); opacity: 1; }
+}
+
+@keyframes collapsible-section-up {
+  from { height: var(--radix-collapsible-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+
+.collapsible-section-content[data-state="open"] {
+  animation: collapsible-section-down 180ms ease-out;
+}
+
+.collapsible-section-content[data-state="closed"] {
+  animation: collapsible-section-up 160ms ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-section-content[data-state] { animation: none; }
+}

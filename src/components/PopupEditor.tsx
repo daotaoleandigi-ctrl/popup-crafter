@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Play, Save, Code2 } from "lucide-react";
+import { ArrowLeft, Play, Save, Code2, ChevronDown } from "lucide-react";
 import type { PopupConfig, PreviewStep } from "@/types";
 import { savePopup } from "@/lib/repository";
 import PublicationControls from "./PublicationControls";
@@ -9,6 +9,11 @@ import PopupPreview from "@/components/PopupPreview";
 import EmbedDialog from "@/components/EmbedDialog";
 import ImageUploader from "@/components/ImageUploader";
 import ColorInput from "@/components/ColorInput";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,17 +33,40 @@ interface PopupEditorProps {
 function Section({
   title,
   children,
+  defaultOpen = false,
 }: {
   title: string;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <div className="border-b border-border px-4 py-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-primary">
-        {title}
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="border-b border-border"
+    >
+      <h3>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="group flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+          >
+            <span>{title}</span>
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                open ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </button>
+        </CollapsibleTrigger>
       </h3>
-      <div className="space-y-3">{children}</div>
-    </div>
+      <CollapsibleContent className="collapsible-section-content overflow-hidden">
+        <div className="space-y-3 px-4 pb-4">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -207,7 +235,7 @@ export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {/* Left settings panel */}
         <aside className="no-scrollbar w-full md:w-80 max-h-[45vh] md:max-h-none shrink-0 overflow-y-auto border-r border-border bg-card">
-          <Section title="Cài đặt chung">
+          <Section title="Cài đặt chung" defaultOpen>
             <Field label="Tên font chữ">
               <select
                 value={config.fontFamily}
