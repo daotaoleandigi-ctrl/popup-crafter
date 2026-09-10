@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PopupConfig, PreviewStep } from "@/types";
 import ScratchCard from "@/components/ScratchCard";
 import Confetti from "@/components/Confetti";
 import EditableText from "@/components/EditableText";
+import { getFormPreviewSource } from "@/lib/form-embed";
 
 interface PopupPreviewProps {
   config: PopupConfig;
@@ -31,6 +32,10 @@ export default function PopupPreview({
   const [bubbleHover, setBubbleHover] = useState(false);
   const timersRef = useRef<number[]>([]);
   const formFrameRef = useRef<HTMLIFrameElement>(null);
+  const formPreviewSource = useMemo(
+    () => getFormPreviewSource(config.formEmbedCode),
+    [config.formEmbedCode],
+  );
 
   // sync external step -> autoStep when not in test flow
   useEffect(() => {
@@ -365,9 +370,14 @@ export default function PopupPreview({
                       <iframe
                         ref={formFrameRef}
                         title="Xem thử form"
-                        sandbox="allow-scripts allow-forms"
+                        sandbox={
+                          formPreviewSource.srcDoc
+                            ? "allow-scripts allow-forms"
+                            : undefined
+                        }
                         className="min-h-80 w-full border-0"
-                        srcDoc={config.formEmbedCode}
+                        src={formPreviewSource.src}
+                        srcDoc={formPreviewSource.srcDoc}
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-center text-xs text-muted-foreground">

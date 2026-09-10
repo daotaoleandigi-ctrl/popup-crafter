@@ -12,7 +12,7 @@ describe("cloud embed loader", () => {
     const script =
       dom.window.document.querySelector<HTMLScriptElement>("#loader")!;
     script.src =
-      "https://crafter.test/embed-loader.js?project=https%3A%2F%2Fdatabase.test&key=public-key&id=test-popup-1";
+      "https://crafter.test/popup-crafter/embed-loader.js?project=https%3A%2F%2Fdatabase.test&key=public-key&id=test-popup-1";
     Object.defineProperty(dom.window.document, "currentScript", {
       value: script,
       configurable: true,
@@ -47,7 +47,17 @@ describe("cloud embed loader", () => {
         "script[data-config]",
       )!;
       expect(script.parentElement?.id).toBe("target");
-      expect(script.src).toBe("https://crafter.test/widget-runtime.js");
+      expect(script.src).toBe(
+        "https://crafter.test/popup-crafter/widget-runtime.js",
+      );
+      expect(fetcher).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer public-key",
+          }),
+        }),
+      );
       expect(
         JSON.parse(
           Buffer.from(script.dataset.config!, "base64").toString("utf8"),

@@ -17,6 +17,7 @@ export function getEmbedCode(popup: PopupConfig) {
   source.searchParams.set("project", cloudUrl);
   source.searchParams.set("key", cloudKey);
   source.searchParams.set("id", popup.id);
+  source.searchParams.set("v", "2");
   return (
     '<script async src="' +
     source.href.replace(/&/g, "&amp;").replace(/"/g, "&quot;") +
