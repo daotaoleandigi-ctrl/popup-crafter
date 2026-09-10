@@ -3,20 +3,12 @@
   var me = document.currentScript;
   if (!me) return;
   var source = new URL(me.src);
-  var project = source.searchParams.get("project");
-  var key = source.searchParams.get("key");
   var id = source.searchParams.get("id");
-  if (!project || !key || !id || !/^[A-Za-z0-9_-]{8,100}$/.test(id)) return;
+  if (!id || !/^[A-Za-z0-9_-]{8,100}$/.test(id)) return;
   var anchor = document.createElement("span");
   me.parentNode.insertBefore(anchor, me);
-  fetch(project.replace(/\/$/, "") + "/rest/v1/rpc/get_published_popup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: key,
-      Authorization: "Bearer " + key,
-    },
-    body: JSON.stringify({ p_id: id }),
+  fetch(new URL("api/public/popups/" + encodeURIComponent(id), source).href, {
+    method: "GET",
     cache: "no-store",
   })
     .then(function (response) {
