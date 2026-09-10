@@ -3,14 +3,11 @@ import { JSDOM } from "jsdom";
 import { WIDGET_RUNTIME } from "../lib/widget-runtime";
 import { createPopup } from "../lib/defaults";
 describe("exported widget", () => {
-  function boot(mode: "popup" | "embed", scratched = false) {
+  function boot(mode: "popup" | "embed") {
     const dom = new JSDOM('<!doctype html><body><section id="target"></section></body>', {runScripts: "dangerously", url: "https://example.test"});
     const w = dom.window;
     w.HTMLCanvasElement.prototype.getContext = () => ({createLinearGradient: () => ({addColorStop() {}}), fillRect() {}, fillText() {}});
     const config = createPopup({displayMode: mode, autoShowDelay: 0});
-    if (scratched) {
-      w.sessionStorage.setItem(`popup-crafter-scratched:${config.id}`, "1");
-    }
     const script = w.document.createElement("script");
     script.dataset.config = Buffer.from(JSON.stringify(config)).toString("base64");
     script.textContent = WIDGET_RUNTIME;
@@ -34,18 +31,14 @@ describe("exported widget", () => {
       expect(dom.window.document.querySelectorAll('[id^="scratch-popup-"]')).toHaveLength(1);
     } finally { dom.window.close(); }
   });
-  it("restores the revealed reward during the same browser session", () => {
-    const dom = boot("popup", true);
+  it("starts from an unscratched reward after a page load", () => {
+    const dom = boot("popup");
     try {
       const shadow = dom.window.document.querySelector<HTMLElement>(
         '[id^="scratch-popup-"]',
       )?.shadowRoot;
-      expect(shadow?.querySelector<HTMLElement>(".pb-scratch")?.style.display).toBe(
-        "none",
-      );
-      expect(shadow?.querySelector<HTMLElement>(".pb-claim")?.style.display).toBe(
-        "flex",
-      );
+      expect(shadow?.querySelector<HTMLElement>(".pb-scratch")?.style.display).toBe("");
+      expect(shadow?.querySelector<HTMLElement>(".pb-claim")?.style.display).toBe("");
     } finally { dom.window.close(); }
   });
 });

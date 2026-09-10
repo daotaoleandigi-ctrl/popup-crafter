@@ -60,11 +60,9 @@ function watchForm(box,onDone){
   ob.observe(box,{childList:true,subtree:true,characterData:true});
   return function(){ob.disconnect();};
 }
-function bindSteps(shadow,host,config,mode){
-  var scratchKey="popup-crafter-scratched:"+(config.id||"default");
-  var completed=false;
-  try{completed=sessionStorage.getItem(scratchKey)==="1";}catch(e){}
-  function saveScratch(){try{sessionStorage.setItem(scratchKey,"1");}catch(e){}}
+function bindSteps(shadow,host,config,mode,visitState){
+  visitState=visitState||{completed:false};
+  var completed=visitState.completed;
   var leftCol=shadow.querySelector(".pb-left"),step=1,autoCloseTimer=null;
   var useBubble=mode==="popup"&&config.bubbleEnabled!==false;
   var bubbleEl=null;
@@ -119,7 +117,7 @@ b.innerHTML='<div style="display:flex;align-items:center;justify-content:center;
   function setStep(s){step=s;if(leftCol)leftCol.dataset.step=String(s);if(s===3&&mode==="popup"){autoCloseTimer=setTimeout(close,5000);}}
   var scratchCanvas=shadow.querySelector(".pb-scratch"),confettiCanvas=shadow.querySelector(".pb-confetti");
   if(scratchCanvas&&completed){scratchCanvas.style.display="none";var savedClaim=shadow.querySelector(".pb-claim"),savedHint=shadow.querySelector(".pb-hint");if(savedHint)savedHint.style.display="none";if(savedClaim)savedClaim.style.display="flex";}
-  else if(scratchCanvas){var step1=shadow.querySelector(".pb-step-1");if(step1){step1.style.touchAction="none";step1.style.cursor="grab";}initScratch(scratchCanvas,step1||scratchCanvas,config,function(){if(completed)return;completed=true;saveScratch();fireConfetti(confettiCanvas,shadow.querySelector(".pb-scratch-wrap"));var ctx=scratchCanvas.getContext("2d");ctx.clearRect(0,0,scratchCanvas.width,scratchCanvas.height);var claim=shadow.querySelector(".pb-claim"),hint=shadow.querySelector(".pb-hint");if(hint)hint.style.display="none";if(claim)claim.style.display="flex";});}
+  else if(scratchCanvas){var step1=shadow.querySelector(".pb-step-1");if(step1){step1.style.touchAction="none";step1.style.cursor="grab";}initScratch(scratchCanvas,step1||scratchCanvas,config,function(){if(completed)return;completed=true;visitState.completed=true;fireConfetti(confettiCanvas,shadow.querySelector(".pb-scratch-wrap"));var ctx=scratchCanvas.getContext("2d");ctx.clearRect(0,0,scratchCanvas.width,scratchCanvas.height);var claim=shadow.querySelector(".pb-claim"),hint=shadow.querySelector(".pb-hint");if(hint)hint.style.display="none";if(claim)claim.style.display="flex";});}
   var claimBtn=shadow.querySelector(".pb-claim-btn"),declineBtn=shadow.querySelector(".pb-decline-btn");
   if(claimBtn)claimBtn.addEventListener("click",function(){setStep(2);});
   if(declineBtn&&mode==="popup")declineBtn.addEventListener("click",function(){if(useBubble)showBubble();else close();});
@@ -138,10 +136,10 @@ b.innerHTML='<div style="display:flex;align-items:center;justify-content:center;
   }
   return function(){window.removeEventListener("message",onMessage);formCleanup();if(autoCloseTimer)clearTimeout(autoCloseTimer);if(bubbleEl&&document.body.contains(bubbleEl))bubbleEl.remove();};
 }
-function mountPopup(config){
+function mountPopup(config,visitState){
   var host=document.createElement("div");host.id="scratch-popup-"+(config.id||Math.random().toString(36).slice(2));host.style.cssText="all:initial;position:fixed;inset:0;z-index:2147483647;";document.body.appendChild(host);
   var shadow=host.attachShadow({mode:"open"});shadow.innerHTML=styles(config,"popup")+markup(config,"popup");
-  var cleanup=bindSteps(shadow,host,config,"popup");
+  var cleanup=bindSteps(shadow,host,config,"popup",visitState);
   return function(){cleanup();host.remove();};
 }
 // --- Bootstrap ------------------------------------------------------------
@@ -149,9 +147,10 @@ var me=document.currentScript;
 var cfgB64=me&&me.getAttribute("data-config");
 var config=cfgB64?dec(cfgB64):null;
 if(!config)return;
-if(config.displayMode==="embed"){var h=document.createElement("div");h.style.cssText="display:block;width:100%";me.parentNode.insertBefore(h,me);var sh=h.attachShadow({mode:"open"});sh.innerHTML=styles(config,"embed")+markup(config,"embed");bindSteps(sh,h,config,"embed");return;}
+if(config.displayMode==="embed"){var h=document.createElement("div");h.style.cssText="display:block;width:100%";me.parentNode.insertBefore(h,me);var sh=h.attachShadow({mode:"open"});sh.innerHTML=styles(config,"embed")+markup(config,"embed");bindSteps(sh,h,config,"embed",{completed:false});return;}
 var activeCleanup=null;
-function openPopup(){if(activeCleanup)activeCleanup();activeCleanup=mountPopup(config);}
+var scratchVisitState={completed:false};
+function openPopup(){if(activeCleanup)activeCleanup();activeCleanup=mountPopup(config,scratchVisitState);}
 // Popup mode: overlay auto-opens on page load (with optional delay).
 // Also exposes open() + click delegation for manual triggers.
 window.ScratchPopup=window.ScratchPopup||{};

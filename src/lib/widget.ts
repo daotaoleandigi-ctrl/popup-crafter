@@ -433,7 +433,14 @@ function fireConfetti(
   requestAnimationFrame(tick);
 }
 
-export function mountPopup(config: PopupConfig): () => void {
+interface ScratchVisitState {
+  completed: boolean;
+}
+
+export function mountPopup(
+  config: PopupConfig,
+  scratchVisitState: ScratchVisitState = { completed: false },
+): () => void {
   const host = document.createElement("div");
   host.id =
     "scratch-popup-" + (config.id || Math.random().toString(36).slice(2));
@@ -455,25 +462,9 @@ export function mountPopup(config: PopupConfig): () => void {
     ".pb-scratch",
   ) as HTMLCanvasElement | null;
 
-  const scratchStateKey = `popup-crafter-scratched:${config.id || "default"}`;
-  const readScratchState = () => {
-    try {
-      return window.sessionStorage.getItem(scratchStateKey) === "1";
-    } catch {
-      return false;
-    }
-  };
-  const saveScratchState = () => {
-    try {
-      window.sessionStorage.setItem(scratchStateKey, "1");
-    } catch {
-      // The in-memory state still works when storage is unavailable.
-    }
-  };
-
   let step = 1;
   let autoCloseTimer: number | null = null;
-  let completed = readScratchState();
+  let completed = scratchVisitState.completed;
 
   // Bubble element (lives OUTSIDE shadow so it can be positioned freely)
   let bubbleEl: HTMLElement | null = null;
@@ -588,7 +579,7 @@ export function mountPopup(config: PopupConfig): () => void {
     initScratch(scratchCanvas, step1 || scratchCanvas, config, () => {
       if (completed) return;
       completed = true;
-      saveScratchState();
+      scratchVisitState.completed = true;
       fireConfetti(confettiCanvas, shadow.querySelector(".pb-scratch-wrap"));
       const ctx = scratchCanvas.getContext("2d")!;
       ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
@@ -770,7 +761,8 @@ export function bootstrapPopup(config: PopupConfig): () => void {
   // Popup mode: auto-open overlay on page load (with optional delay).
   // Exposes open() so manual triggers still work.
   if (config.displayMode === "popup") {
-    window.ScratchPopup.open = () => mountPopup(config);
+    const scratchVisitState: ScratchVisitState = { completed: false };
+    window.ScratchPopup.open = () => mountPopup(config, scratchVisitState);
 
     const onClick = (e: MouseEvent) => {
       let t = e.target as HTMLElement | null;
@@ -791,7 +783,7 @@ export function bootstrapPopup(config: PopupConfig): () => void {
     document.addEventListener("click", onClick);
 
     let autoTimer: number | null = null;
-    const autoOpen = () => mountPopup(config);
+    const autoOpen = () => mountPopup(config, scratchVisitState);
     const delay = (config.autoShowDelay || 0) * 1000;
     if (delay > 0) {
       autoTimer = window.setTimeout(autoOpen, delay);
