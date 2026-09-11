@@ -11,10 +11,23 @@ export function json(value, status = 200, extraHeaders = {}) {
   });
 }
 
-export function getSupabaseConfig(env) {
-  const url = String(env.SUPABASE_URL || "").replace(/\/$/, "");
-  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
-  if (!url || !key) throw new Error("Cloud service is not configured");
+export function getSupabaseConfig(env = {}) {
+  const url = String(
+    env.SUPABASE_URL ||
+    env.VITE_SUPABASE_URL ||
+    ""
+  ).replace(/\/$/, "");
+
+  const key = String(
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    ""
+  );
+
+  if (!url && !key) throw new Error("Thiếu SUPABASE_URL và SUPABASE_PUBLISHABLE_KEY trong Cloudflare Environment Variables");
+  if (!url) throw new Error("Thiếu SUPABASE_URL trong Cloudflare Environment Variables");
+  if (!key) throw new Error("Thiếu SUPABASE_PUBLISHABLE_KEY trong Cloudflare Environment Variables");
+
   return { url, key };
 }
 
