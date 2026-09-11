@@ -14,7 +14,7 @@ export function getEmbedCode(popup: PopupConfig) {
     new URL(import.meta.env.BASE_URL, window.location.origin).href;
   const source = new URL("embed-loader.js", base.endsWith("/") ? base : `${base}/`);
   source.searchParams.set("id", popup.id);
-  source.searchParams.set("v", "3");
+  source.searchParams.set("v", "4");
   return (
     '<script async src="' +
     source.href.replace(/&/g, "&amp;").replace(/"/g, "&quot;") +

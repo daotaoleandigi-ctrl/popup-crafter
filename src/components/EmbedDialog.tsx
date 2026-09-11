@@ -34,6 +34,12 @@ export default function EmbedDialog({
   if (!open || !popup) return null;
 
   const embed = getEmbedCode(popup);
+  const appBase = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, "");
+  const ghlBridge = `<script src="${appBase}/ghl-voucher-bridge.js"
+  data-claim-field="THAY_BANG_ID_TRUONG_CLAIM"
+  data-voucher-field="THAY_BANG_ID_TRUONG_TEN_VOUCHER"
+  data-code-field="THAY_BANG_ID_TRUONG_MA_VOUCHER"
+  data-campaign-field="THAY_BANG_ID_TRUONG_CHIEN_DICH"></script>`;
 
   // Suggested trigger button the user can paste alongside the script.
   const triggerBtn = `<button class="scratch-popup-trigger">Cào quà ngay</button>`;
@@ -164,6 +170,18 @@ export default function EmbedDialog({
                   : "Popup overlay TỰ ĐỘNG mở ngay khi tải trang. Có nền mờ + nút đóng. Vẫn mở thêm được bằng nút bấm bên dưới."
             }
           />
+
+          <CodeBlock
+            label="Mã cầu nối GHL (đặt trong Custom HTML của Form)"
+            code={ghlBridge}
+            copyKey="ghl-bridge"
+            note="Tạo 4 Contact Custom Field trong GHL, thêm chúng vào Form rồi thay bốn ID tương ứng trong mã. Có thể ẩn các trường bằng phần cài đặt giao diện của Form."
+          />
+
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">Webhook xác nhận GHL:</strong>{" "}
+            dùng <code className="rounded bg-muted px-1">{appBase}/api/webhooks/ghl</code> trong Workflow “Form Submitted”, phương thức POST. Gửi claim_id, contact_id, email và phone; thêm header <code className="rounded bg-muted px-1">X-Popup-Crafter-Secret</code> bằng secret đã đặt trên Cloudflare.
+          </div>
 
           {popup.displayMode === "popup" && (
             <>

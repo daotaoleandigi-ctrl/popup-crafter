@@ -65,6 +65,10 @@ export interface PopupConfig {
   // Multi-Voucher Randomization
   voucherRandomEnabled: boolean;
   vouchers: VoucherItem[];
+  // Runtime-only claim metadata added by the Cloudflare embed loader.
+  serverClaimId?: string;
+  selectedVoucherId?: string;
+  voucherCode?: string;
 
   // Left column — Step 2 form
   formEmbedCode: string;

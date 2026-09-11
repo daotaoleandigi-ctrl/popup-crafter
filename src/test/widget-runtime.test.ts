@@ -73,4 +73,20 @@ describe("exported widget", () => {
       )).toBe(selected);
     } finally { dom.window.close(); }
   });
+  it("passes authoritative claim details into the embedded GHL form URL", () => {
+    const dom = boot("popup", {
+      serverClaimId: "11111111-1111-4111-8111-111111111111",
+      selectedVoucherId: "v2",
+      voucherCode: "SALE100",
+      rewardText: "Voucher 100k",
+      formEmbedCode: '<iframe src="https://widgets.leadconnectorhq.com/form/example"></iframe>',
+    });
+    try {
+      const frame = dom.window.document.querySelector<HTMLElement>('[id^="scratch-popup-"]')?.shadowRoot?.querySelector<HTMLIFrameElement>("iframe");
+      const url = new URL(frame!.src);
+      expect(url.searchParams.get("popup_claim_id")).toBe("11111111-1111-4111-8111-111111111111");
+      expect(url.searchParams.get("popup_voucher_name")).toBe("Voucher 100k");
+      expect(url.searchParams.get("popup_voucher_code")).toBe("SALE100");
+    } finally { dom.window.close(); }
+  });
 });

@@ -73,6 +73,14 @@ Các test tự động dùng PostgreSQL WASM và mô phỏng Auth/Storage schema
 
 Form trong trang quản trị/demo chạy trong iframe sandbox để cách ly phiên đăng nhập. Một số CRM yêu cầu cookie hoặc quyền điều hướng có thể không hoạt động đầy đủ trong sandbox; cần kiểm tra form thật trên website nhúng. Không gỡ sandbox khỏi trang quản trị để sửa lỗi tương thích.
 
+## 7. Ghi nhận voucher vào GHL
+1. Chạy migration `202609110003_voucher_claims.sql` trong Supabase SQL Editor.
+2. Đặt secret `GHL_WEBHOOK_SECRET` trong Cloudflare Pages cho Production và Preview.
+3. Trong GHL tạo 4 Contact Custom Field dạng Short Text: Popup Claim ID, Tên voucher, Mã voucher, Chiến dịch popup. Thêm chúng vào form.
+4. Trong Popup Crafter mở “Lưu & Lấy mã nhúng”, sao chép mã cầu nối GHL vào Custom HTML của form và thay các placeholder bằng ID thật của 4 custom field.
+5. Tạo workflow với trigger “Form Submitted”. Thêm Custom Webhook POST tới `/api/webhooks/ghl`, header `X-Popup-Crafter-Secret`, body JSON gồm `claim_id`, `contact_id`, `email`, `phone` lấy từ contact/custom fields.
+6. Gửi form thử và kiểm tra contact GHL cùng bảng `voucher_claims`. Dòng thành công có trạng thái `confirmed`.
+
 ## Giới hạn phạm vi
 Mỗi tài khoản sở hữu dữ liệu riêng. Chưa có workspace chung, mời thành viên, thanh toán hay thống kê lead. Thông tin khách gửi trong form vẫn do CRM của form quản lý; ứng dụng này lưu cấu hình popup và ảnh.
 

@@ -17,7 +17,17 @@ describe("cloud embed loader", () => {
       value: script,
       configurable: true,
     });
-    const fetcher = vi.fn().mockResolvedValue({ ok, json: async () => config });
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce({ ok, json: async () => config })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          claimId: "11111111-1111-4111-8111-111111111111",
+          voucherId: "v2",
+          rewardText: "Voucher 100k",
+          code: "SALE100",
+        }),
+      });
     dom.window.fetch = fetcher;
     dom.window.eval(
       readFileSync(
@@ -47,11 +57,10 @@ describe("cloud embed loader", () => {
       )!;
       expect(script.parentElement?.id).toBe("target");
       expect(script.src).toBe("https://crafter.test/widget-runtime.js");
-      expect(
-        JSON.parse(
-          Buffer.from(script.dataset.config!, "base64").toString("utf8"),
-        ).name,
-      ).toBe("Quà 🎁");
+      const loaded = JSON.parse(Buffer.from(script.dataset.config!, "base64").toString("utf8"));
+      expect(loaded.name).toBe("Quà 🎁");
+      expect(loaded.serverClaimId).toBe("11111111-1111-4111-8111-111111111111");
+      expect(loaded.rewardText).toBe("Voucher 100k");
     } finally {
       dom.window.close();
     }

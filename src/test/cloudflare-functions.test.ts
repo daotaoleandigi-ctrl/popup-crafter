@@ -2,6 +2,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { onRequestGet as getPublicPopup } from "../../functions/api/public/popups/[id].js";
 import { onRequest as handleSupabaseProxy } from "../../functions/api/supabase/[[path]].js";
+import { onRequestPost as createClaim } from "../../functions/api/public/claims.js";
+import { onRequestPost as confirmGhlClaim } from "../../functions/api/webhooks/ghl.js";
 
 describe("Cloudflare Functions", () => {
   const mockEnv = {
@@ -114,6 +116,55 @@ describe("Cloudflare Functions", () => {
         expect.objectContaining({
           method: "POST",
         }),
+      );
+      fetchSpy.mockRestore();
+    });
+  });
+
+  describe("voucher claim endpoints", () => {
+    it("creates a server-side claim for a valid popup visitor", async () => {
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+        new Response(JSON.stringify({ claimId: "11111111-1111-4111-8111-111111111111", rewardText: "Voucher 50k" }), { status: 200 }),
+      );
+      const response = await createClaim({
+        env: mockEnv,
+        request: new Request("https://myapp.com/api/public/claims", {
+          method: "POST",
+          body: JSON.stringify({ popupId: "valid-popup-id-123", visitorKey: "visitor_key_123456789" }),
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "https://mock.supabase.co/rest/v1/rpc/create_voucher_claim",
+        expect.objectContaining({ method: "POST" }),
+      );
+      fetchSpy.mockRestore();
+    });
+
+    it("rejects a GHL webhook without the shared secret", async () => {
+      const response = await confirmGhlClaim({
+        env: { ...mockEnv, GHL_WEBHOOK_SECRET: "expected-secret" },
+        request: new Request("https://myapp.com/api/webhooks/ghl", { method: "POST", body: "{}" }),
+      });
+      expect(response.status).toBe(401);
+    });
+
+    it("confirms a claim from an authenticated GHL webhook", async () => {
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "confirmed" }), { status: 200 }),
+      );
+      const response = await confirmGhlClaim({
+        env: { ...mockEnv, GHL_WEBHOOK_SECRET: "expected-secret" },
+        request: new Request("https://myapp.com/api/webhooks/ghl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Popup-Crafter-Secret": "expected-secret" },
+          body: JSON.stringify({ claim_id: "11111111-1111-4111-8111-111111111111", contact_id: "ghl-1", email: "lead@example.com" }),
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "https://mock.supabase.co/rest/v1/rpc/confirm_voucher_claim",
+        expect.objectContaining({ body: expect.stringContaining("lead@example.com") }),
       );
       fetchSpy.mockRestore();
     });

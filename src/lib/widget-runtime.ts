@@ -34,6 +34,13 @@ function applyVoucher(config){
   merged.selectedVoucherId=selected.id;merged.voucherCode=selected.code||"";
   return merged;
 }
+function prepareFormHtml(html,config){
+  if(!html||!config.serverClaimId)return html;
+  var box=document.createElement("div");box.innerHTML=html;
+  var values={popup_claim_id:config.serverClaimId,popup_voucher_id:config.selectedVoucherId||"",popup_voucher_name:config.rewardText||"",popup_voucher_code:config.voucherCode||"",popup_campaign:config.name||config.id||""};
+  box.querySelectorAll("iframe").forEach(function(frame){try{var url=new URL(frame.getAttribute("src")||"",location.href);Object.keys(values).forEach(function(k){url.searchParams.set(k,values[k]);});frame.setAttribute("src",url.href);}catch(e){}});
+  return box.innerHTML;
+}
 function styles(c,mode){
   mode=mode||"popup";
   var r=c.borderRadius||16,mw=c.maxWidth||880;
@@ -161,7 +168,7 @@ b.innerHTML='<div style="display:flex;align-items:center;justify-content:center;
   window.addEventListener("message",onMessage);
   var formBox=shadow.querySelector(".pb-form-box");
   var formCleanup=function(){};
-  if(formBox&&config.formEmbedCode){formBox.innerHTML=config.formEmbedCode;formBox.querySelectorAll("script").forEach(function(old){var s=document.createElement("script");for(var i=0;i<old.attributes.length;i++){s.setAttribute(old.attributes[i].name,old.attributes[i].value);}s.textContent=old.textContent;old.replaceWith(s);});formCleanup=watchForm(formBox,function(){if(step===2)setStep(3);});}
+  if(formBox&&config.formEmbedCode){formBox.innerHTML=prepareFormHtml(config.formEmbedCode,config);formBox.querySelectorAll("script").forEach(function(old){var s=document.createElement("script");for(var i=0;i<old.attributes.length;i++){s.setAttribute(old.attributes[i].name,old.attributes[i].value);}s.textContent=old.textContent;old.replaceWith(s);});formCleanup=watchForm(formBox,function(){if(step===2)setStep(3);});}
   if(useBubble){
     document.addEventListener("click",function(e){
       var t=e.target;
