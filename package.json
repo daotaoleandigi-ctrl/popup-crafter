@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "pages:dev": "wrangler pages dev dist",
     "test": "vitest run",
     "test:watch": "vitest",
     "prebuild": "node scripts/build-widget.mjs",

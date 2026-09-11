@@ -9,19 +9,17 @@
 - Legacy local data and JSON backup import; JSON export remains available.
 - Admin form preview and demo are sandboxed from authentication state.
 - Updated Vite and React Router; npm audit reported zero vulnerabilities after upgrades.
+- Cloudflare Pages & Functions Migration Phase 1 & 2: Added `functions/api/supabase/[[path]].js` proxy, `functions/api/public/popups/[id].js` public endpoint, Cloudflare workflow `.github/workflows/deploy-cloudflare.yml`, `public/_redirects` SPA fallback, `public/_routes.json`, and `wrangler` local dev script.
+- Vitest suite expanded: 22 tests passing across 9 test files including dedicated Cloudflare Functions proxy & public RPC tests.
 
 ## Live service state
-- .env.local contains the user-provided Supabase Project URL and publishable key; it is ignored by git.
-- Auth settings endpoint returned HTTP 200: email enabled, signup enabled, email confirmation required.
-- Both 001 and 002 migrations have been applied successfully to the real project. Public RPC returns 200; anonymous table reads are denied.
-- User signed into dashboard; SQL setup completed using SQL Editor.
-- Live SQL transaction with two synthetic users passed isolation, stale revision rejection, draft/publication separation and unpublish. Rollback confirmed no test users or popup remained.
-- Site URL set to http://127.0.0.1:8080 for current testing. Replace/add production domain when deploying.
-- No frontend deployment or VITE_APP_URL configured yet. Do not hand out localhost embed codes for production websites.
+- `.env.local` contains Supabase credentials and `VITE_APP_URL`.
+- Cloudflare Functions handles backend proxy and CORS isolation.
+- `public/_redirects` configured with `/* /index.html 200` for SPA client routing on Cloudflare Pages.
 
 ## Verification
-- 13 tests passed: storage, import validation, widget runtime, cloud loader, login gate, PostgreSQL RLS/publication/image-folder restrictions.
-- Application TypeScript, ESLint and production build pass.
+- 22 tests passed (Auth, Storage, Widget Runtime, Cloud Loader, Cloudflare Functions proxy/RPC).
+- TypeScript, ESLint, production bundle (`npm run build`) pass cleanly.
 - Login page visually inspected at localhost:8080.
 - Database tests use PostgreSQL WASM with mocked Auth/Storage schemas, not the hosted Supabase database.
 
