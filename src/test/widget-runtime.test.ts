@@ -19,7 +19,8 @@ describe("exported widget", () => {
   function boot(mode: "popup" | "embed", partial = {}) {
     const dom = new JSDOM('<!doctype html><body><section id="target"></section></body>', {runScripts: "dangerously", url: "https://example.test"});
     const w = dom.window;
-    w.HTMLCanvasElement.prototype.getContext = () => ({createLinearGradient: () => ({addColorStop() {}}), fillRect() {}, fillText() {}});
+    (w as typeof w & { __coverFillCount?: number }).__coverFillCount = 0;
+    w.HTMLCanvasElement.prototype.getContext = () => ({createLinearGradient: () => ({addColorStop() {}}), fillRect() { (w as typeof w & { __coverFillCount?: number }).__coverFillCount!++; }, fillText() {}});
     const config = createPopup({displayMode: mode, autoShowDelay: 0, ...partial});
     const script = w.document.createElement("script");
     script.dataset.config = Buffer.from(JSON.stringify(config)).toString("base64");
@@ -52,6 +53,12 @@ describe("exported widget", () => {
       )?.shadowRoot;
       expect(shadow?.querySelector<HTMLElement>(".pb-scratch")?.style.display).toBe("");
       expect(shadow?.querySelector<HTMLElement>(".pb-claim")?.style.display).toBe("");
+    } finally { dom.window.close(); }
+  });
+  it("paints an opaque cover before a remote cover image finishes loading", () => {
+    const dom = boot("popup", { scratchCoverImage: "https://cdn.example.test/large-cover.webp" });
+    try {
+      expect((dom.window as typeof dom.window & { __coverFillCount?: number }).__coverFillCount).toBeGreaterThan(0);
     } finally { dom.window.close(); }
   });
   it("keeps the selected random voucher when the popup is reopened", () => {

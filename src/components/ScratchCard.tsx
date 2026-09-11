@@ -77,6 +77,9 @@ export default function ScratchCard({
     const drawCover = () => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = "source-over";
+      // Paint an opaque fallback synchronously so the reward never flashes
+      // while a remote cover image is still downloading.
+      fillDefault(ctx);
       if (coverImage) {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -87,8 +90,6 @@ export default function ScratchCard({
           fillDefault(ctx);
         };
         img.src = coverImage;
-      } else {
-        fillDefault(ctx);
       }
     };
 
