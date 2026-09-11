@@ -43,12 +43,15 @@ export async function onRequest({ request, env, params }) {
       headers.set("Authorization", `Bearer ${key}`);
     }
 
-    const response = await fetch(target, {
+    const body =
+      request.method === "GET" || request.method === "HEAD"
+        ? undefined
+        : await request.arrayBuffer();
+
+    const response = await fetch(target.href, {
       method: request.method,
       headers,
-      body: request.method === "GET" || request.method === "HEAD"
-        ? undefined
-        : request.body,
+      body,
       redirect: "manual",
     });
     const outputHeaders = new Headers(response.headers);
@@ -63,7 +66,7 @@ export async function onRequest({ request, env, params }) {
       statusText: response.statusText,
       headers: outputHeaders,
     });
-  } catch {
-    return json({ message: "Cloud service unavailable" }, 503);
+  } catch (error) {
+    return json({ message: error?.message || "Cloud service unavailable" }, 503);
   }
 }

@@ -110,7 +110,7 @@ describe("Cloudflare Functions", () => {
 
       expect(response.status).toBe(200);
       expect(fetchSpy).toHaveBeenCalledWith(
-        new URL("https://mock.supabase.co/auth/v1/signup"),
+        "https://mock.supabase.co/auth/v1/signup",
         expect.objectContaining({
           method: "POST",
         }),
