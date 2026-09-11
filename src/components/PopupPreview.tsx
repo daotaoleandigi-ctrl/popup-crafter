@@ -4,6 +4,7 @@ import ScratchCard from "@/components/ScratchCard";
 import Confetti from "@/components/Confetti";
 import EditableText from "@/components/EditableText";
 import { getFormPreviewSource } from "@/lib/form-embed";
+import { pickRandomVoucher } from "@/lib/voucher-random";
 
 interface PopupPreviewProps {
   config: PopupConfig;
@@ -11,6 +12,7 @@ interface PopupPreviewProps {
   onStepChange: (s: PreviewStep) => void;
   onFieldChange: (field: keyof PopupConfig, value: string | number) => void;
   testMode?: boolean;
+  voucherPreviewNonce?: number;
 }
 
 export default function PopupPreview({
@@ -19,6 +21,7 @@ export default function PopupPreview({
   onStepChange,
   onFieldChange,
   testMode,
+  voucherPreviewNonce = 0,
 }: PopupPreviewProps) {
   const [confetti, setConfetti] = useState(0);
   const [confettiOrigin, setConfettiOrigin] = useState<{
@@ -30,12 +33,23 @@ export default function PopupPreview({
   const [minimized, setMinimized] = useState(false);
   const [scratched, setScratched] = useState(false);
   const [bubbleHover, setBubbleHover] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState(() =>
+    config.voucherRandomEnabled ? pickRandomVoucher(config.vouchers) : undefined,
+  );
   const timersRef = useRef<number[]>([]);
   const formFrameRef = useRef<HTMLIFrameElement>(null);
   const formPreviewSource = useMemo(
     () => getFormPreviewSource(config.formEmbedCode),
     [config.formEmbedCode],
   );
+  useEffect(() => {
+    setSelectedVoucher(
+      config.voucherRandomEnabled ? pickRandomVoucher(config.vouchers) : undefined,
+    );
+    setScratched(false);
+  }, [voucherPreviewNonce, config.voucherRandomEnabled, config.vouchers]);
+
+  const reward = selectedVoucher || config;
 
   // sync external step -> autoStep when not in test flow
   useEffect(() => {
@@ -261,13 +275,14 @@ export default function PopupPreview({
                   />
                   <ScratchCard
                     coverImage={config.scratchCoverImage}
-                    rewardImage={config.rewardImage}
-                    rewardSubtitle={config.rewardSubtitle}
-                    rewardSubtitleColor={config.rewardSubtitleColor}
+                    rewardImage={reward.rewardImage || ""}
+                    rewardSubtitle={reward.rewardSubtitle || ""}
+                    rewardSubtitleColor={reward.rewardSubtitleColor || config.rewardSubtitleColor}
                     rewardSubtitleFontSize={config.rewardSubtitleFontSize}
                     rewardSubtitleFontFamily={config.rewardSubtitleFontFamily}
-                    rewardText={config.rewardText}
-                    rewardTextColor={config.rewardTextColor}
+                    rewardText={reward.rewardText}
+                    rewardCode={"code" in reward ? reward.code : undefined}
+                    rewardTextColor={reward.rewardTextColor || config.rewardTextColor}
                     rewardTextFontSize={config.rewardTextFontSize}
                     rewardTextFontFamily={config.rewardTextFontFamily}
                     rewardIconBefore={config.rewardIconBefore}
@@ -306,14 +321,14 @@ export default function PopupPreview({
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                       <div className="flex max-w-[280px] flex-col items-center gap-1 text-center">
-                        {config.rewardSubtitle && (
+                        {reward.rewardSubtitle && (
                           <EditableText
                             as="span"
-                            value={config.rewardSubtitle}
+                            value={reward.rewardSubtitle}
                             onChange={(v) => onFieldChange("rewardSubtitle", v)}
                             className="font-semibold"
                             style={{
-                              color: config.rewardSubtitleColor,
+                              color: reward.rewardSubtitleColor || config.rewardSubtitleColor,
                               fontSize: config.rewardSubtitleFontSize,
                               fontFamily: config.rewardSubtitleFontFamily,
                             }}
@@ -322,7 +337,7 @@ export default function PopupPreview({
                         <div
                           className="flex items-center justify-center gap-1.5 font-extrabold"
                           style={{
-                            color: config.rewardTextColor,
+                            color: reward.rewardTextColor || config.rewardTextColor,
                             fontSize: config.rewardTextFontSize,
                             fontFamily: config.rewardTextFontFamily,
                             whiteSpace: "pre-wrap",
@@ -333,7 +348,7 @@ export default function PopupPreview({
                           )}
                           <EditableText
                             as="span"
-                            value={config.rewardText}
+                            value={reward.rewardText}
                             onChange={(v) => onFieldChange("rewardText", v)}
                             multiline
                           />

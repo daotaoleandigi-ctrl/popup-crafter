@@ -2,6 +2,25 @@
 "use strict";
 function dec(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){try{return JSON.parse(atob(s))}catch(e2){return null}}}
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function pickVoucher(vouchers){
+  var eligible=(vouchers||[]).filter(function(v){return Number(v.probability)>0}),total=eligible.reduce(function(sum,v){return sum+Number(v.probability)},0);
+  if(!eligible.length||total<=0)return vouchers&&vouchers[0];
+  var cursor=Math.random()*total;
+  for(var i=0;i<eligible.length;i++){cursor-=Number(eligible[i].probability);if(cursor<0)return eligible[i];}
+  return eligible[eligible.length-1];
+}
+function applyVoucher(config){
+  if(!config.voucherRandomEnabled||!config.vouchers||!config.vouchers.length)return config;
+  var key="popup-crafter:voucher:"+(config.id||"default"),selected=null;
+  try{var saved=sessionStorage.getItem(key);if(saved)selected=config.vouchers.find(function(v){return v.id===saved});}catch(e){}
+  if(!selected)selected=pickVoucher(config.vouchers);
+  if(!selected)return config;
+  try{sessionStorage.setItem(key,selected.id);}catch(e){}
+  var merged={};for(var k in config)merged[k]=config[k];
+  ["rewardText","rewardSubtitle","rewardImage","rewardTextColor","rewardSubtitleColor"].forEach(function(k){if(selected[k]!=null)merged[k]=selected[k];});
+  merged.selectedVoucherId=selected.id;merged.voucherCode=selected.code||"";
+  return merged;
+}
 function styles(c,mode){
   mode=mode||"popup";
   var r=c.borderRadius||16,mw=c.maxWidth||880;
@@ -16,7 +35,8 @@ function markup(c,mode){
   var banner=c.bannerImage?'<img src="'+esc(c.bannerImage)+'" alt="Banner">':'<div class="pb-banner-placeholder"><span style="font-size:30px">\u{1F381}</span><span style="font-size:14px;font-weight:600;opacity:.9">Banner</span></div>';
 var ib=c.rewardIconBefore?esc(c.rewardIconBefore):"",ia=c.rewardIconAfter?esc(c.rewardIconAfter):"";
   var sub=c.rewardSubtitle?'<div class="pb-reward-subtitle">'+esc(c.rewardSubtitle).replace(/\\n/g,"<br>")+'</div>':'';
-  var reward=c.rewardImage?'<div class="pb-reward"><img src="'+esc(c.rewardImage)+'" alt="reward"></div>':'<div class="pb-reward">'+sub+'<div class="pb-reward-text">'+(ib?'<span class="pb-ico">'+ib+'</span>':'')+'<span class="pb-reward-line">'+esc(c.rewardText||"Ph\u1EA7n th\u01B0\u1EDFng").replace(/\\n/g,"<br>")+'</span>'+(ia?'<span class="pb-ico">'+ia+'</span>':'')+'</div></div>';
+  var code=c.voucherCode?'<div style="margin-top:8px;border:1px dashed currentColor;border-radius:6px;padding:4px 8px;font:700 12px monospace;letter-spacing:.08em">'+esc(c.voucherCode)+'</div>':'';
+  var reward=c.rewardImage?'<div class="pb-reward"><img src="'+esc(c.rewardImage)+'" alt="reward">'+code+'</div>':'<div class="pb-reward">'+sub+'<div class="pb-reward-text">'+(ib?'<span class="pb-ico">'+ib+'</span>':'')+'<span class="pb-reward-line">'+esc(c.rewardText||"Ph\u1EA7n th\u01B0\u1EDFng").replace(/\\n/g,"<br>")+'</span>'+(ia?'<span class="pb-ico">'+ia+'</span>':'')+'</div>'+code+'</div>';
   var formInner=c.formEmbedCode?"":'<div style="display:flex;height:100%;align-items:center;justify-content:center;text-align:center;font-size:12px;color:#94a3b8">Form s\u1EBD hi\u1EC3n th\u1ECB t\u1EA1i \u0111\xE2y</div>';
   var closeBtn=mode==="popup"?'<button class="pb-close" aria-label="\u0110\xF3ng">'+(c.closeStyle==="text"?"\u0110\xF3ng \u00D7":"\u00D7")+'</button>':"";
   var declineBtn=c.showDeclineButton===false?"":'<button class="pb-decline-btn">'+esc(c.declineButtonLabel||"Kh\xF4ng, c\u1EA3m \u01A1n")+'</button>';
@@ -147,6 +167,7 @@ var me=document.currentScript;
 var cfgB64=me&&me.getAttribute("data-config");
 var config=cfgB64?dec(cfgB64):null;
 if(!config)return;
+config=applyVoucher(config);
 if(config.displayMode==="embed"){var h=document.createElement("div");h.style.cssText="display:block;width:100%";me.parentNode.insertBefore(h,me);var sh=h.attachShadow({mode:"open"});sh.innerHTML=styles(config,"embed")+markup(config,"embed");bindSteps(sh,h,config,"embed",{completed:false});return;}
 var activeCleanup=null;
 var scratchVisitState={completed:false};

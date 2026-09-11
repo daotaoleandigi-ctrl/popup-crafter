@@ -2,6 +2,17 @@ export type CloseStyle = "circle" | "square" | "text";
 export type BannerFit = "cover" | "contain";
 export type PreviewStep = 1 | 2 | 3;
 
+export interface VoucherItem {
+  id: string;
+  rewardText: string;
+  rewardSubtitle?: string;
+  rewardImage?: string;
+  rewardTextColor?: string;
+  rewardSubtitleColor?: string;
+  code?: string;
+  probability: number;
+}
+
 export interface PopupConfig {
   id: string;
   name: string;
@@ -50,6 +61,10 @@ export interface PopupConfig {
   claimButtonTextColor: string;
   declineButtonLabel: string;
   showDeclineButton: boolean;
+
+  // Multi-Voucher Randomization
+  voucherRandomEnabled: boolean;
+  vouchers: VoucherItem[];
 
   // Left column — Step 2 form
   formEmbedCode: string;

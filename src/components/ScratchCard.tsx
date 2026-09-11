@@ -8,6 +8,7 @@ interface ScratchCardProps {
   rewardSubtitleFontSize?: number;
   rewardSubtitleFontFamily?: string;
   rewardText: string;
+  rewardCode?: string;
   rewardTextColor: string;
   rewardTextFontSize?: number;
   rewardTextFontFamily?: string;
@@ -36,6 +37,7 @@ export default function ScratchCard({
   rewardSubtitleFontSize,
   rewardSubtitleFontFamily,
   rewardText,
+  rewardCode,
   rewardTextColor,
   rewardTextFontSize,
   rewardTextFontFamily,
@@ -219,6 +221,11 @@ export default function ScratchCard({
                 <span>{rewardText || "Phần thưởng"}</span>
                 {rewardIconAfter && <span aria-hidden>{rewardIconAfter}</span>}
               </div>
+              {rewardCode && (
+                <span className="mt-2 rounded-md border border-dashed border-current px-2 py-1 font-mono text-xs font-bold tracking-wider">
+                  {rewardCode}
+                </span>
+              )}
             </>
           )}
         </div>

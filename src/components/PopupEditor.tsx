@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Play, Save, Code2, ChevronDown } from "lucide-react";
-import type { PopupConfig, PreviewStep } from "@/types";
+import { ArrowLeft, Play, Save, Code2, ChevronDown, Plus, Trash2, Dices } from "lucide-react";
+import type { PopupConfig, PreviewStep, VoucherItem } from "@/types";
 import { savePopup } from "@/lib/repository";
 import PublicationControls from "./PublicationControls";
-import { FONT_OPTIONS } from "@/lib/defaults";
+import { createPopup, FONT_OPTIONS } from "@/lib/defaults";
 import PopupPreview from "@/components/PopupPreview";
 import EmbedDialog from "@/components/EmbedDialog";
 import ImageUploader from "@/components/ImageUploader";
 import ColorInput from "@/components/ColorInput";
+import { getVoucherProbabilityTotal } from "@/lib/voucher-random";
 import {
   Collapsible,
   CollapsibleContent,
@@ -91,12 +92,13 @@ const inputCls =
   "w-full rounded-lg border border-input bg-card px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/40";
 
 export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
-  const [config, setConfig] = useState<PopupConfig>(popup);
+  const [config, setConfig] = useState<PopupConfig>(() => createPopup(popup));
   const [step, setStep] = useState<PreviewStep>(1);
   const [testMode, setTestMode] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
   const [saved, setSaved] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+  const [voucherPreviewNonce, setVoucherPreviewNonce] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const firstRun = useRef(true);
@@ -107,16 +109,39 @@ export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
 
   // keep latest config in state if popup prop changes
   useEffect(() => {
-    setConfig(popup);
+    setConfig(createPopup(popup));
   }, [popup.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const update = (
-    field: keyof PopupConfig,
-    value: string | number | boolean,
-  ) => {
+  const update = <K extends keyof PopupConfig>(field: K, value: PopupConfig[K]) => {
     setConfig((c) => ({ ...c, [field]: value, updatedAt: Date.now() }));
     setDirty(true);
     setSaved(false);
+  };
+
+  const updateVoucher = <K extends keyof VoucherItem>(
+    id: string,
+    field: K,
+    value: VoucherItem[K],
+  ) => update("vouchers", config.vouchers.map((v) => v.id === id ? { ...v, [field]: value } : v));
+
+  const addVoucher = () => update("vouchers", [
+    ...config.vouchers,
+    {
+      id: crypto.randomUUID(),
+      rewardText: `Voucher ${config.vouchers.length + 1}`,
+      rewardSubtitle: "Bạn đã trúng",
+      rewardTextColor: config.rewardTextColor,
+      rewardSubtitleColor: config.rewardSubtitleColor,
+      probability: 0,
+    },
+  ]);
+
+  const removeVoucher = (id: string) => {
+    if (config.vouchers.length <= 2) {
+      toast.error("Cần ít nhất 2 voucher khi bật chế độ ngẫu nhiên.");
+      return;
+    }
+    update("vouchers", config.vouchers.filter((v) => v.id !== id));
   };
 
   const persist = (cfg: PopupConfig): Promise<boolean> => {
@@ -374,11 +399,87 @@ export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
           </Section>
 
           <Section title="Bước 1 — Thẻ cào">
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <span>
+                  <span className="block text-xs font-bold text-foreground">Ngẫu nhiên phần thưởng</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">Mỗi khách nhận một voucher theo tỷ lệ đã đặt.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={config.voucherRandomEnabled}
+                  onChange={(e) => update("voucherRandomEnabled", e.target.checked)}
+                  className="h-4 w-4 shrink-0 accent-primary"
+                />
+              </label>
+            </div>
+
+            {config.voucherRandomEnabled && (() => {
+              const total = getVoucherProbabilityTotal(config.vouchers);
+              const valid = Math.abs(total - 100) < 0.001;
+              return (
+                <div className="space-y-3">
+                  <div className={`rounded-xl border p-3 ${valid ? "border-emerald-300 bg-emerald-50/70" : "border-amber-300 bg-amber-50/70"}`}>
+                    <div className="mb-2 flex items-center justify-between text-xs font-bold">
+                      <span>Tổng tỷ lệ</span>
+                      <span className={valid ? "text-emerald-700" : "text-amber-700"}>{total}% / 100%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white shadow-inner">
+                      <div className={`h-full rounded-full transition-all ${valid ? "bg-emerald-500" : "bg-amber-500"}`} style={{ width: `${Math.min(total, 100)}%` }} />
+                    </div>
+                    {!valid && <p className="mt-2 text-[11px] text-amber-800">Điều chỉnh để tổng tỷ lệ bằng đúng 100%.</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    {config.vouchers.map((voucher, index) => (
+                      <Collapsible key={voucher.id} defaultOpen={index === 0} className="rounded-xl border border-border bg-card">
+                        <div className="flex items-center">
+                          <CollapsibleTrigger className="flex min-h-11 flex-1 items-center justify-between gap-2 px-3 text-left text-xs font-bold hover:bg-muted/50">
+                            <span className="truncate">{voucher.rewardText || `Voucher ${index + 1}`}</span>
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-primary">{voucher.probability || 0}%</span>
+                          </CollapsibleTrigger>
+                          <button type="button" aria-label={`Xóa voucher ${index + 1}`} onClick={() => removeVoucher(voucher.id)} className="mr-2 rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <CollapsibleContent>
+                          <div className="space-y-3 border-t border-border px-3 py-3">
+                            <Field label="Tên phần thưởng">
+                              <input value={voucher.rewardText} onChange={(e) => updateVoucher(voucher.id, "rewardText", e.target.value)} className={inputCls} />
+                            </Field>
+                            <Field label="Tiêu đề phụ">
+                              <input value={voucher.rewardSubtitle || ""} onChange={(e) => updateVoucher(voucher.id, "rewardSubtitle", e.target.value)} className={inputCls} />
+                            </Field>
+                            <ImageUploader label="Ảnh phần thưởng" value={voucher.rewardImage || ""} onChange={(value) => updateVoucher(voucher.id, "rewardImage", value)} />
+                            <Field label="Mã voucher">
+                              <input value={voucher.code || ""} onChange={(e) => updateVoucher(voucher.id, "code", e.target.value)} placeholder="VD: GIAM50K" className={inputCls} />
+                            </Field>
+                            <Field label="Tỷ lệ trúng (%)">
+                              <input type="number" min={0} max={100} step={1} value={voucher.probability} onChange={(e) => updateVoucher(voucher.id, "probability", Math.min(100, Math.max(0, Number(e.target.value))))} className={inputCls} />
+                            </Field>
+                            <div className="grid grid-cols-2 gap-2">
+                              <ColorInput label="Màu tên quà" value={voucher.rewardTextColor || config.rewardTextColor} onChange={(value) => updateVoucher(voucher.id, "rewardTextColor", value)} />
+                              <ColorInput label="Màu tiêu đề phụ" value={voucher.rewardSubtitleColor || config.rewardSubtitleColor} onChange={(value) => updateVoucher(voucher.id, "rewardSubtitleColor", value)} />
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={addVoucher} className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-2 text-xs font-semibold hover:border-primary hover:text-primary"><Plus className="h-3.5 w-3.5" /> Thêm voucher</button>
+                    <button type="button" disabled={!valid} onClick={() => { setStep(1); setVoucherPreviewNonce((n) => n + 1); }} className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"><Dices className="h-3.5 w-3.5" /> Thử random</button>
+                  </div>
+                </div>
+              );
+            })()}
+
             <ImageUploader
               label="Ảnh phủ cào (Scratch Cover)"
               value={config.scratchCoverImage}
               onChange={(v) => update("scratchCoverImage", v)}
             />
+            <div className={config.voucherRandomEnabled ? "hidden" : "contents"}>
             <ImageUploader
               label="Ảnh phần thưởng (bên dưới lớp cào)"
               value={config.rewardImage}
@@ -486,6 +587,7 @@ export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
                 ))}
               </select>
             </Field>
+            </div>
             <Field
               label={`% cào sạch để chuyển bước (${config.scratchPercent}%)`}
             >
@@ -755,13 +857,14 @@ export default function PopupEditor({ popup, onBack }: PopupEditorProps) {
 
         {/* Main canvas */}
         <main className="relative min-h-[500px] md:min-h-0 min-w-0 flex-1 bg-[radial-gradient(circle_at_center,hsl(var(--muted)),hsl(var(--background)))]">
-          <PopupPreview
+            <PopupPreview
             key={previewKey}
             config={config}
             step={step}
             onStepChange={setStep}
             onFieldChange={update}
-            testMode={testMode}
+              testMode={testMode}
+              voucherPreviewNonce={voucherPreviewNonce}
           />
           {testMode && (
             <div className="absolute right-6 top-6 z-40 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground shadow">
