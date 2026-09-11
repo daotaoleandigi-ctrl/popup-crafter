@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-const proxyPath = import.meta.env.VITE_API_URL || "";
+const defaultProxy = import.meta.env.DEV ? "" : "/api/supabase";
+const proxyPath = import.meta.env.VITE_API_URL || defaultProxy;
 const proxyUrl =
   proxyPath && typeof window !== "undefined"
     ? new URL(proxyPath, window.location.origin).href.replace(/\/$/, "")
